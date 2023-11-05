@@ -15,7 +15,7 @@ origins = [
     "http://localhost:8080",
     "http://127.0.0.1:8080",
     "https://herokufrontendsql-8c522739b4c3.herokuapp.com",
-    "https://herokufrontendflask-16424024f58f.herokuapp.com"
+    "https://herokuflaskfront-60829f087760.herokuapp.com"
 ]
 
 # Agregamos las opciones de origenes, credenciales, métodos y headers

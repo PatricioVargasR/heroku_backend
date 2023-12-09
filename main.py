@@ -8,6 +8,7 @@ import hashlib
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials, HTTPBearer, HTTPAuthorizationCredentials
+import time
 
 security = HTTPBasic()
 
@@ -43,33 +44,6 @@ class Contacto(BaseModel):
     telefono: str
 
 
-class Usuario(BaseModel):
-    username: str
-    password: str
-
-@app.post("/crear_cuenta")
-async def crear_cuenta(usuario: Usuario):
-    """Crea una nueva cuenta de usuario."""
-    try:
-        # Verificar si el usuario ya existe
-        c = conn.cursor()
-        c.execute('SELECT * FROM usuarios WHERE username = ?', (usuario.username,))
-        existing_user = c.fetchone()
-
-        if existing_user:
-            raise HTTPException(status_code=400, detail="El usuario ya existe")
-
-        # Crear un nuevo usuario en la base de datos
-        password_hash = hashlib.md5(usuario.password.encode()).hexdigest()
-
-        c.execute('INSERT INTO usuarios (username, password) VALUES (?, ?)',
-                  (usuario.username, password_hash))
-        conn.commit()
-
-        return {"mensaje": "Cuenta creada exitosamente"}
-    except sqlite3.Error as e:
-        return error_response("Error al crear la cuenta", 500)
-    
 # Respuesta de error
 def error_response(mensaje: str, status_code: int):
     return JSONResponse(content={"mensaje": mensaje}, status_code=status_code)

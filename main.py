@@ -62,6 +62,11 @@ async def get_user_token(email: str, password_hash: str):
     result = c.fetchone()
     return result
 
+async def verify_token(token: str):
+    c = conn.cursor()
+    c.execute("SELECT token FROM usuarios WHERE token = ?", (token, ))
+    result = c.fetchone()
+    return result
 
 @app.get("/token/")
 async def validate_user(credentials: HTTPBasicCredentials = Depends(security)):
@@ -112,12 +117,17 @@ async def root(credentialsv: HTTPAuthorizationCredentials = Depends(securirtyBea
 @app.post("/contactos")
 async def crear_contacto(contacto: Contacto, credentialsv: HTTPAuthorizationCredentials = Depends(securirtyBearer)):
     token = credentialsv.credentials
-    if not token:
+
+
+    current_token = await verify_token(token)
+
+    if not token or not current_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token no proporcionado",
+            detail="Token invalido",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
 
     """Crea un nuevo contacto."""
     try:
@@ -133,10 +143,12 @@ async def crear_contacto(contacto: Contacto, credentialsv: HTTPAuthorizationCred
 @app.get("/contactos")
 async def obtener_contactos(credentialsv: HTTPAuthorizationCredentials = Depends(securirtyBearer)):
     token = credentialsv.credentials
-    if not token:
+    current_token = await verify_token(token)
+
+    if not token or not current_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token no proporcionado",
+            detail="Token invalido",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -158,10 +170,12 @@ async def obtener_contactos(credentialsv: HTTPAuthorizationCredentials = Depends
 @app.get("/contactos/{email}")
 async def obtener_contacto(email: str, credentialsv: HTTPAuthorizationCredentials = Depends(securirtyBearer)):
     token = credentialsv.credentials
-    if not token:
+    current_token = await verify_token(token)
+
+    if not token or not current_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token no proporcionado",
+            detail="Token invalido",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -182,10 +196,12 @@ async def obtener_contacto(email: str, credentialsv: HTTPAuthorizationCredential
 @app.put("/actualizar_contactos/{email}")
 async def actualizar_contacto(email: str, contacto: Contacto, credentialsv: HTTPAuthorizationCredentials = Depends(securirtyBearer)):
     token = credentialsv.credentials
-    if not token:
+    current_token = await verify_token(token)
+
+    if not token or not current_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token no proporcionado",
+            detail="Token invalido",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -203,12 +219,15 @@ async def actualizar_contacto(email: str, contacto: Contacto, credentialsv: HTTP
 @app.delete("/contactos/{email}")
 async def eliminar_contacto(email: str, credentialsv: HTTPAuthorizationCredentials = Depends(securirtyBearer)):
     token = credentialsv.credentials
-    if not token:
+    current_token = await verify_token(token)
+
+    if not token or not current_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token no proporcionado",
+            detail="Token invalido",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
     """Elimina un contacto."""
     try:
         c = conn.cursor()

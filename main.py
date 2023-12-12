@@ -6,9 +6,9 @@ from uuid import uuid4 as new_token
 import hashlib
 # Importamos CORS para el acceso
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials, HTTPBearer, HTTPAuthorizationCredentials
-import time
+
 
 security = HTTPBasic()
 
@@ -48,26 +48,31 @@ class Contacto(BaseModel):
 def error_response(mensaje: str, status_code: int):
     return JSONResponse(content={"mensaje": mensaje}, status_code=status_code)
 
-
+# Función para cambiar el TOKEN al momento de iniciar una nueva sesión
 async def cambiar_token_en_login(email):
     token = str(new_token())
     c = conn.cursor()
     c.execute("UPDATE usuarios SET token = ? WHERE username = ?", (token, email))
     conn.commit()
     return token
-    
+
+# Función para obtener el token
 async def get_user_token(email: str, password_hash: str):
     c = conn.cursor()
     c.execute("SELECT token FROM usuarios WHERE username = ? AND password = ?", (email, password_hash))
     result = c.fetchone()
     return result
 
+# Función para verificar el token
 async def verify_token(token: str):
     c = conn.cursor()
     c.execute("SELECT token FROM usuarios WHERE token = ?", (token, ))
     result = c.fetchone()
     return result
 
+
+
+# Función para obtener el TOKEN mediante el uso de BasicCredentials
 @app.get("/token/")
 async def validate_user(credentials: HTTPBasicCredentials = Depends(security)):
     email = credentials.username

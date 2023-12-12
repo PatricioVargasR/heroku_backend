@@ -96,12 +96,15 @@ async def validate_user(credentials: HTTPBasicCredentials = Depends(security)):
 @app.get("/")
 async def root(credentialsv: HTTPAuthorizationCredentials = Depends(securirtyBearer)):
     token = credentialsv.credentials
-    if not token:
+    current_token = await verify_token(token)
+
+    if not token or not current_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token no proporcionado",
+            detail="Token invalido",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
 
     c = conn.cursor()
     c.execute("SELECT token FROM usuarios WHERE token = ?", (token,))
@@ -122,7 +125,6 @@ async def root(credentialsv: HTTPAuthorizationCredentials = Depends(securirtyBea
 @app.post("/contactos")
 async def crear_contacto(contacto: Contacto, credentialsv: HTTPAuthorizationCredentials = Depends(securirtyBearer)):
     token = credentialsv.credentials
-
 
     current_token = await verify_token(token)
 
